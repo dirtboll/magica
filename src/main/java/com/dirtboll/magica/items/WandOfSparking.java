@@ -31,7 +31,6 @@ public class WandOfSparking extends WandItem {
     void cast(Player caster, InteractionHand hand) {
         super.cast(caster, hand);
 
-
         var view = caster.getViewVector(1.0F);
         for (int i = 0; i < 4; i++) {
             FireSparkProjectile fireSpark = new FireSparkProjectile(caster.level, caster);

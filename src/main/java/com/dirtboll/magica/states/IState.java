@@ -9,4 +9,6 @@ public interface IState<T extends IState<T>> {
     IState<?> process();
     void addProcess(Function<T, @Nullable IState<?>> chain);
     List<Function<T, @Nullable IState<?>>> getProcessChain();
+
+    void onChangeState(IState<?> from, IState<?> to);
 }

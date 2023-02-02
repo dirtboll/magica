@@ -9,13 +9,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class SearchState extends State<SearchState> {
 
     private Entity subject;
     private int searchRadius;
 
-    private TargetingConditions targetingConditions;
+    private Predicate<Entity> filterPredicate;
 
     public int getSearchRadius() {
         return searchRadius;
@@ -31,19 +32,18 @@ public class SearchState extends State<SearchState> {
 
     public void setSubject(Entity subject) {
         this.subject = subject;
-        this.targetingConditions = TargetingConditions.DEFAULT;
     }
 
-
-
-    public static Function<SearchState, @Nullable IState<?>> searchProcessFactory(ITargetingState<?> homingState) {
+    public static Function<SearchState, @Nullable IState<?>> searchProcessFactory(ITargetingState<?> nextState) {
         return (SearchState state) -> {
             var subject = state.getSubject();
 
             if (subject == null || !subject.isAlive())
                 return null;
 
-            List<LivingEntity> entities = subject.level.getEntitiesOfClass(LivingEntity.class, subject.getBoundingBox().inflate(state.searchRadius), (e) -> e != subject);
+            var bound = subject.getBoundingBox();
+
+            List<LivingEntity> entities = subject.level.getEntitiesOfClass(LivingEntity.class, subject.getBoundingBox().inflate(state.searchRadius), state.filterPredicate == null ? (e) -> e != subject : state.filterPredicate);
 
             double d0 = -1.0D;
             LivingEntity t = null;
@@ -62,10 +62,18 @@ public class SearchState extends State<SearchState> {
             if (t == null)
                 return null;
 
-            homingState.setTarget(t);
-            homingState.setSubject(subject);
+            nextState.setTarget(t);
+            nextState.setSubject(subject);
 
-            return homingState;
+            return nextState;
         };
+    }
+
+    public Predicate<Entity> getFilterPredicate() {
+        return filterPredicate;
+    }
+
+    public void setFilterPredicate(Predicate<Entity> filterPredicate) {
+        this.filterPredicate = filterPredicate;
     }
 }

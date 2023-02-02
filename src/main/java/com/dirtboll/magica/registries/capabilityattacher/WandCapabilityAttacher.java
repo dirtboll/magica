@@ -3,6 +3,7 @@ package com.dirtboll.magica.registries.capabilityattacher;
 import com.dirtboll.magica.Magica;
 import com.dirtboll.magica.capabilities.wand.WandCapability;
 import com.dirtboll.magica.capabilities.wand.WandCapabilityImpl;
+import com.dirtboll.magica.items.WandItem;
 import com.dirtboll.magica.items.WandOfSparking;
 import com.dirtboll.magica.registries.CapabilityRegistry;
 import net.minecraft.core.Direction;
@@ -51,7 +52,7 @@ public class WandCapabilityAttacher {
 
     @SubscribeEvent
     public static void attachCapability(final AttachCapabilitiesEvent<ItemStack> event) {
-        if (!(event.getObject().getItem() instanceof WandOfSparking)) return;
+        if (!(event.getObject().getItem() instanceof WandItem)) return;
 
         final WandCapabilityProvider provider = new WandCapabilityProvider();
         event.addCapability(WandCapabilityProvider.IDENTIFIER, provider);

@@ -27,6 +27,13 @@ public class EntityRegistry {
             .build("fire_spark")
     );
 
+    public static final RegistryObject<EntityType<CrystalSerpentProjectile>> CRYSTAL_SERPENT = ENTITIES.register("crystal_serpent", () ->
+        EntityType.Builder.of((EntityType.EntityFactory<CrystalSerpentProjectile>) CrystalSerpentProjectile::new, MobCategory.MISC)
+            .sized(0.1f, 0.1f)
+            .fireImmune()
+            .setShouldReceiveVelocityUpdates(true)
+            .build("crystal_serpent")
+    );
 
     public static void register() {
         ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());

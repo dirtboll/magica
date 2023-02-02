@@ -1,5 +1,7 @@
 {
+  "itemGroup.magica": "Magica",
   "item.magica.wand_of_sparking": "Wand of Sparking",
   "item.magica.wand_of_sparking.tooltip": "Shoots a small spark",
-  "itemGroup.magica": "Magica"
+  "item.magica.crystal_serpent": "Crystal Serpent",
+  "item.magica.crystal_serpent.tooltip": "Shoots the spit of a Sea Serpent"
 }

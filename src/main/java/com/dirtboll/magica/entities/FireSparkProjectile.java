@@ -18,12 +18,12 @@ import org.jetbrains.annotations.NotNull;
 public class FireSparkProjectile extends ThrowableItemProjectile {
 
     // TODO: Use config
-//    public static int DEFAULT_LIFETIME = 5;
+    public static int DEFAULT_LIFETIME = 100;
     public static float DEFAULT_HIT_DAMAGE = 4f;
     public static int DEFAULT_IGNITE_DURATION_MIN = 2;
     public static int DEFAULT_IGNITE_DURATION_RANGE = 5;
 
-//    private int tickLeft = DEFAULT_LIFETIME;
+    private int tickLeft = DEFAULT_LIFETIME;
 
     public FireSparkProjectile(EntityType<? extends FireSparkProjectile> entityType, Level level) {
         super(entityType, level);
@@ -63,10 +63,10 @@ public class FireSparkProjectile extends ThrowableItemProjectile {
     @Override
     public void tick() {
         super.tick();
-//        if (tickLeft < 0) {
-//            kill();
-//        }
-//        tickLeft -= 1;
+        if (tickLeft < 0) {
+            kill();
+        }
+        tickLeft -= 1;
         if (isInWater() || isInPowderSnow)
             kill();
 

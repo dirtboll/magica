@@ -15,5 +15,6 @@ public class RendererRegistry {
     public static void register(final FMLClientSetupEvent event) {
         Magica.LOGGER.info("Registering renderers...");
         EntityRenderers.register(EntityRegistry.FIRE_SPARK.get(), ThrownItemRenderer::new);
+        EntityRenderers.register(EntityRegistry.CRYSTAL_SERPENT.get(), ThrownItemRenderer::new);
     }
 }

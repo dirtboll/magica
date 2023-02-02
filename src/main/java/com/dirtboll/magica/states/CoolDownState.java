@@ -37,18 +37,19 @@ public class CoolDownState extends State<CoolDownState> {
         return lastTimeStamp;
     }
 
-    public static Function<CoolDownState, @Nullable IState<?>> waitProcessFactory(IState<?> nextState) {
+    public static Function<CoolDownState, @Nullable IState<?>> coolDownProcessFactory(IState<?> nextState) {
         return (CoolDownState state) -> {
             var currentTimeStamp = System.currentTimeMillis();
             var diff = currentTimeStamp - state.getLastTimeStamp();
             var timeLeft = state.getTimeLeft() - diff;
 
-            if (timeLeft < 0)
-                return nextState;
+            if (timeLeft > 0) {
+                state.setTimeLeft(timeLeft);
+                state.setLastTimeStamp(currentTimeStamp);
+                return null;
+            }
 
-            state.setTimeLeft(timeLeft);
-            state.setLastTimeStamp(currentTimeStamp);
-            return state;
+            return nextState;
         };
     }
 }
