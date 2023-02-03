@@ -1,55 +1,41 @@
 package com.dirtboll.magica.states;
 
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
+@Data
 public class CoolDownState extends State<CoolDownState> {
-    private long coolDownTime;
-    private long lastTimeStamp;
-    private long timeLeft;
+    @NonNull private long coolDownMs;
 
-    public long getCoolDownTimeMilis() {
-        return coolDownTime;
+    @Setter(AccessLevel.PRIVATE) private long startTimeStamp = -1;
+
+    @Override
+    public void onChangeState(IState<?> from, IState<?> to) {
+        super.onChangeState(from, to);
+        if (to == this)
+            this.startTimeStamp = System.currentTimeMillis();
+        else
+            this.startTimeStamp = -1;
     }
 
-    public void setCoolDownTimeMilis(long coolDownTime) {
-        this.coolDownTime = coolDownTime;
-    }
-
-    public long getTimeLeft() {
-        return timeLeft;
-    }
-
-    public void setTimeLeft(long timeLeft) {
-        this.timeLeft = timeLeft;
-    }
-
-    public void restart() {
-        this.setTimeLeft(this.getCoolDownTimeMilis());
-    }
-
-    public void setLastTimeStamp(long lastTimeStamp) {
-        this.lastTimeStamp = lastTimeStamp;
-    }
-
-    public long getLastTimeStamp() {
-        return lastTimeStamp;
-    }
-
-    public static Function<CoolDownState, @Nullable IState<?>> coolDownProcessFactory(IState<?> nextState) {
+    public static Function<CoolDownState, @Nullable IState<?>> coolDownProcessFactory() {
         return (CoolDownState state) -> {
-            var currentTimeStamp = System.currentTimeMillis();
-            var diff = currentTimeStamp - state.getLastTimeStamp();
-            var timeLeft = state.getTimeLeft() - diff;
+            if (state.startTimeStamp < 0)
+                state.startTimeStamp = System.currentTimeMillis();
 
-            if (timeLeft > 0) {
-                state.setTimeLeft(timeLeft);
-                state.setLastTimeStamp(currentTimeStamp);
+            if (System.currentTimeMillis() - state.startTimeStamp > state.getCoolDownMs())
                 return null;
-            }
 
-            return nextState;
+            return state;
         };
+    }
+
+    public static Function<CoolDownState, @Nullable IState<?>> fallbackProcessFactory(IState<?> nextState) {
+        return (state -> nextState);
     }
 }

@@ -1,6 +1,5 @@
 package com.dirtboll.magica.entities;
 
-import com.dirtboll.magica.Magica;
 import com.dirtboll.magica.registries.EntityRegistry;
 import com.dirtboll.magica.states.*;
 import net.minecraft.client.Minecraft;
@@ -11,7 +10,6 @@ import net.minecraft.world.damagesource.IndirectEntityDamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -42,29 +40,23 @@ public class CrystalSerpentProjectile extends ThrowableItemProjectile {
     }
 
     private void initState() {
-//        this.setNoGravity(true);
+        var coolDownState = new CoolDownState(this.generation == 0 ? 500 : 0);
 
-        var coolDownState = new CoolDownState();
-        coolDownState.setCoolDownTimeMilis(this.generation == 0 ? 2000 : 500);
-
-        var searchState = new SearchState();
-        searchState.setSubject(this);
-        searchState.setSearchRadius(10);
+        var searchState = new SearchState(this);
         searchState.setFilterPredicate((e) -> e != this && e != this.getOwner());
+        searchState.setSearchRadius(30);
 
-        var homingState = new HomingState();
-        homingState.setSubject(this);
+        var homingState = new HomingState(this);
         homingState.setHomingDistance(searchState.getSearchRadius());
 
+        coolDownState.addProcess(CoolDownState.coolDownProcessFactory());
+        coolDownState.addProcess(CoolDownState.fallbackProcessFactory(searchState));
 
-        coolDownState.addProcess(CoolDownState.coolDownProcessFactory(searchState));
-        coolDownState.addProcess(coolDownState.fallbackProcessFactory(coolDownState, (s) -> true));
+        searchState.addProcess(SearchState.searchProcessFactory());
+        searchState.addProcess(SearchState.fallbackProcessFactory(homingState));
 
-        searchState.addProcess(SearchState.searchProcessFactory(homingState));
-        searchState.addProcess(searchState.fallbackProcessFactory(searchState, (s) -> s.getSubject() != null && s.getSubject().isAlive()));
-
-        homingState.addProcess(HomingState.homingProcessFactory(homingState));
-        homingState.addProcess(homingState.fallbackProcessFactory(searchState, (s) -> s.getSubject() != null && s.getSubject().isAlive()));
+        homingState.addProcess(HomingState.homingProcessFactory());
+        homingState.addProcess(HomingState.fallbackProcessFactory(searchState));
 
         this.aiState = coolDownState;
     }
@@ -83,7 +75,7 @@ public class CrystalSerpentProjectile extends ThrowableItemProjectile {
                 var projectile = new CrystalSerpentProjectile(this.level, (Player) getOwner());
                 projectile.generation += 1;
                 projectile.setPos(entityHitResult.getLocation());
-                projectile.shoot(vel.getX(), vel.getY(), vel.getZ(), 0.5f, 30f);
+                projectile.shoot(vel.getX(), vel.getY(), vel.getZ(), 1f, 30f);
                 this.level.addFreshEntity(projectile);
             }
         }
@@ -99,7 +91,7 @@ public class CrystalSerpentProjectile extends ThrowableItemProjectile {
                 var projectile = new CrystalSerpentProjectile(this.level, (Player) getOwner());
                 projectile.generation += 1;
                 projectile.setPos(blockHitResult.getLocation());
-                projectile.shoot( vel.getX(), vel.getY(), vel.getZ(), 0.5f, 30f);
+                projectile.shoot( vel.getX(), vel.getY(), vel.getZ(), 1f, 30f);
                 this.level.addFreshEntity(projectile);
             }
         }

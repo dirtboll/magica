@@ -1,5 +1,9 @@
 package com.dirtboll.magica.states;
 
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.Setter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
@@ -11,37 +15,21 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@Data
 public class SearchState extends State<SearchState> {
 
-    private Entity subject;
-    private int searchRadius;
+    @NonNull private Entity subject;
+    private int searchRadius = 10;
+    private Predicate<Entity> filterPredicate = e -> e != subject;
+    @Setter(AccessLevel.PRIVATE) private Entity foundTarget;
 
-    private Predicate<Entity> filterPredicate;
-
-    public int getSearchRadius() {
-        return searchRadius;
-    }
-
-    public void setSearchRadius(int searchRadius) {
-        this.searchRadius = searchRadius;
-    }
-
-    public Entity getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Entity subject) {
-        this.subject = subject;
-    }
-
-    public static Function<SearchState, @Nullable IState<?>> searchProcessFactory(ITargetingState<?> nextState) {
+    public static Function<SearchState, @Nullable IState<?>> searchProcessFactory() {
         return (SearchState state) -> {
+            state.setFoundTarget(null);
             var subject = state.getSubject();
 
-            if (subject == null || !subject.isAlive())
+            if (!subject.isAlive())
                 return null;
-
-            var bound = subject.getBoundingBox();
 
             List<LivingEntity> entities = subject.level.getEntitiesOfClass(LivingEntity.class, subject.getBoundingBox().inflate(state.searchRadius), state.filterPredicate == null ? (e) -> e != subject : state.filterPredicate);
 
@@ -59,21 +47,22 @@ public class SearchState extends State<SearchState> {
                 }
             }
 
-            if (t == null)
+            if (t != null) {
+                state.setFoundTarget(t);
                 return null;
+            }
 
-            nextState.setTarget(t);
-            nextState.setSubject(subject);
-
-            return nextState;
+            return state;
         };
     }
 
-    public Predicate<Entity> getFilterPredicate() {
-        return filterPredicate;
-    }
-
-    public void setFilterPredicate(Predicate<Entity> filterPredicate) {
-        this.filterPredicate = filterPredicate;
+    public static Function<SearchState, @Nullable IState<?>> fallbackProcessFactory(ITargetingState<?> nextState) {
+        return (SearchState state) -> {
+            if (state.getFoundTarget() == null)
+                return null;
+            nextState.setTarget(state.getFoundTarget());
+            nextState.setSubject(state.getSubject());
+            return nextState;
+        };
     }
 }
