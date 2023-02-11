@@ -1,29 +1,65 @@
 package com.dirtboll.magica.states;
 
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-@Data
+@Getter
+@Setter
 public class SearchState extends State<SearchState> {
 
     @NonNull private Entity subject;
     private int searchRadius = 10;
-    private Predicate<Entity> filterPredicate = e -> e != subject;
+    @Setter(AccessLevel.PRIVATE) private Predicate<Entity> filterPredicate = EntitySelector.NO_CREATIVE_OR_SPECTATOR
+            .and(e -> e instanceof LivingEntity);
     @Setter(AccessLevel.PRIVATE) private Entity foundTarget;
 
-    public static Function<SearchState, @Nullable IState<?>> searchProcessFactory() {
+    public SearchState(@NotNull Entity subject) {
+        this.subject = subject;
+    }
+
+    public void addFilterPredicate(Predicate<Entity> pred) {
+        this.filterPredicate = this.filterPredicate.and(pred);
+    }
+
+    private AABB getSearchArea(Entity subject) {
+        return AABB.unitCubeFromLowerCorner(subject.getEyePosition()).inflate(this.searchRadius);
+    }
+
+    public void setSearchRadius(int searchRadius) {
+        this.searchRadius = searchRadius;
+    }
+
+    private boolean isInSight(Entity eA, Entity eB) {
+        if (eB.level != eA.level) {
+            return false;
+        } else {
+            Vec3 aVec = new Vec3(eA.getX(), eA.getEyeY(), eA.getZ());
+            Vec3 bVec = new Vec3(eB.getX(), eB.getY(), eB.getZ());
+            if (bVec.distanceTo(aVec) > 128.0D) {
+                return false;
+            } else {
+                var hitRes = eA.level.clip(new ClipContext(aVec, bVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, eA));
+                return hitRes.getType() == HitResult.Type.MISS;
+            }
+        }
+    }
+
+    public Function<SearchState, @Nullable IState<?>> searchProcessFactory(IState<?> nextState) {
         return (SearchState state) -> {
             state.setFoundTarget(null);
             var subject = state.getSubject();
@@ -31,17 +67,19 @@ public class SearchState extends State<SearchState> {
             if (!subject.isAlive())
                 return null;
 
-            List<LivingEntity> entities = subject.level.getEntitiesOfClass(LivingEntity.class, subject.getBoundingBox().inflate(state.searchRadius), state.filterPredicate == null ? (e) -> e != subject : state.filterPredicate);
+            List<Entity> entities = subject.level.getEntities(
+                    subject,
+                    state.getSearchArea(subject),
+                    state.getFilterPredicate()
+            );
 
-            double d0 = -1.0D;
-            LivingEntity t = null;
-            var x = subject.getX();
-            var y = subject.getY();
-            var z = subject.getZ();
+            double d0 = Double.MAX_VALUE;
+            Entity t = null;
 
-            for(LivingEntity t1 : entities) {
-                double d1 = t1.distanceToSqr(x, y, z);
-                if (d0 == -1.0D || d1 < d0) {
+            for(Entity t1 : entities) {
+                double d1 = t1.distanceTo(subject);
+                boolean inSight = isInSight(t1, subject);
+                if (d1 < d0 && inSight) {
                     d0 = d1;
                     t = t1;
                 }
@@ -52,11 +90,11 @@ public class SearchState extends State<SearchState> {
                 return null;
             }
 
-            return state;
+            return nextState;
         };
     }
 
-    public static Function<SearchState, @Nullable IState<?>> fallbackProcessFactory(ITargetingState<?> nextState) {
+    public Function<SearchState, @Nullable IState<?>> fallbackProcessFactory(ITargetingState<?> nextState) {
         return (SearchState state) -> {
             if (state.getFoundTarget() == null)
                 return null;

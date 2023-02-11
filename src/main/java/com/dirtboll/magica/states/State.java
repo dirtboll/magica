@@ -1,6 +1,5 @@
 package com.dirtboll.magica.states;
 
-import com.dirtboll.magica.Magica;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -12,12 +11,14 @@ public abstract class State<T extends IState<T>> implements IState<T> {
     private final List<Function<T, @Nullable IState<?>>> processChain = new ArrayList<>();
 
     public IState<?> process() {
-        IState<?> res;
+        IState<?> res = new EndState();
         for (Function<T, IState<?>> proc : this.getProcessChain()) {
-            res = proc.apply((T) this);
-            if (res != null) return res;
+            var r = proc.apply((T) this);
+            if (r != null) {
+                res = r;
+                break;
+            }
         }
-        res = new EndState();
         if (res != this) {
             this.onChangeState(this, res);
             res.onChangeState(this, res);
@@ -26,11 +27,11 @@ public abstract class State<T extends IState<T>> implements IState<T> {
     }
     public void addProcess(Function<T, @Nullable IState<?>> chain) {
         this.processChain.add(chain);
-    };
+    }
 
     public List<Function<T, @Nullable IState<?>>> getProcessChain() {
         return this.processChain;
-    };
+    }
 
     public Function<T, @Nullable IState<?>> fallbackProcessFactory(IState<?> nextState, Predicate<T> predicate) {
         return (T state) -> {
@@ -40,5 +41,5 @@ public abstract class State<T extends IState<T>> implements IState<T> {
         };
     }
 
-    public void onChangeState(IState<?> from, IState<?> to) {};
+    public void onChangeState(IState<?> from, IState<?> to) {}
 }

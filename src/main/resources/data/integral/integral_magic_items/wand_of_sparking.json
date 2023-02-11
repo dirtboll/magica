@@ -1,0 +1,9 @@
+{
+  "item" : "magica:wand_of_sparking",
+  "usages" : [
+    {
+      "type": "interact",
+      "amount": 5
+    }
+  ]
+}

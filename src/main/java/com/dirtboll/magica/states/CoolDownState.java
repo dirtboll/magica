@@ -1,16 +1,15 @@
 package com.dirtboll.magica.states;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class CoolDownState extends State<CoolDownState> {
-    @NonNull private long coolDownMs;
+    @NonNull private Long coolDownMs;
 
     @Setter(AccessLevel.PRIVATE) private long startTimeStamp = -1;
 
@@ -23,7 +22,7 @@ public class CoolDownState extends State<CoolDownState> {
             this.startTimeStamp = -1;
     }
 
-    public static Function<CoolDownState, @Nullable IState<?>> coolDownProcessFactory() {
+    public Function<CoolDownState, @Nullable IState<?>> coolDownProcessFactory() {
         return (CoolDownState state) -> {
             if (state.startTimeStamp < 0)
                 state.startTimeStamp = System.currentTimeMillis();
@@ -35,7 +34,7 @@ public class CoolDownState extends State<CoolDownState> {
         };
     }
 
-    public static Function<CoolDownState, @Nullable IState<?>> fallbackProcessFactory(IState<?> nextState) {
+    public Function<CoolDownState, @Nullable IState<?>> fallbackProcessFactory(IState<?> nextState) {
         return (state -> nextState);
     }
 }

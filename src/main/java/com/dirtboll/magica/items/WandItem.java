@@ -9,7 +9,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import org.jetbrains.annotations.NotNull;
@@ -41,19 +40,15 @@ public abstract class WandItem extends Item {
 
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
-        ItemStack wand = player.getItemInHand(hand);
-        WandCapability capability = getWandCapability(wand);
-        if (capability != null && capability.doCast()) {
-            cast(player, hand);
-            capability.setCoolDown(getCoolDown());
-            return InteractionResultHolder.pass(wand);
-        } else {
-            return InteractionResultHolder.fail(wand);
+        cast(player, hand);
+        if (!level.isClientSide) {
+            Magica.LOGGER.info("{}", this.getCoolDown());
+            player.getCooldowns().addCooldown(this, this.getCoolDown());
         }
+        return super.use(level, player, hand);
     }
 
-
-    abstract long getCoolDown();
+    abstract int getCoolDown();
 
     void cast(Player caster, InteractionHand hand) {
         caster.swing(hand);

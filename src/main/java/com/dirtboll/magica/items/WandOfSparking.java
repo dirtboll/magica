@@ -1,18 +1,19 @@
 package com.dirtboll.magica.items;
 
-import com.dirtboll.magica.Magica;
 import com.dirtboll.magica.entities.FireSparkProjectile;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 
 public class WandOfSparking extends WandItem {
     public static int MAX_DAMAGE = 60;
-    public static long COOL_DOWN_MIN = 500;
-    public static long COOL_DOWN_RANGE = 200;
+//    public static long COOL_DOWN_MIN = 500;
+//    public static long COOL_DOWN_RANGE = 200;
+    public static int COOL_DOWN_MIN = 10;
+    public static int COOL_DOWN_RANGE = 4;
 
     public WandOfSparking() {
         super(new Item.Properties()
@@ -23,8 +24,8 @@ public class WandOfSparking extends WandItem {
     }
 
     @Override
-    long getCoolDown() {
-        return COOL_DOWN_MIN + (long)(random.nextDouble() * (double) COOL_DOWN_RANGE);
+    int getCoolDown() {
+        return COOL_DOWN_MIN + (int)(random.nextDouble() * (double) COOL_DOWN_RANGE);
     }
 
     @Override
